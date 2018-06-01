@@ -1,0 +1,2 @@
+
+add_subdirectory(slam_class)

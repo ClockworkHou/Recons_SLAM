@@ -1,0 +1,1 @@
+/usr/bin/c++   -g    CMakeFiles/recons_slam.dir/main.o  -o recons_slam -rdynamic 
