@@ -13,17 +13,18 @@ void Map::insertKeyFrame( Frame* frame )
 	{
 		key_frames[ frame->id] = frame;
 	}
-}
+};
 
-void insertMapPoint( MapPoint* map_point )
+void Map::insertMapPoint( MapPoint* map_point )
 {
 	 if ( map_points.find(map_point->id) == map_points.end() )
 	{
-		map_points.insert( make_pair(map_point->id_, map_point) );
+		map_points.insert( make_pair(map_point->id, map_point) );
 	}
 	else 
 	{
 		map_points[map_point->id] = map_point;
 	}
+};
 	
 }

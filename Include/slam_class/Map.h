@@ -7,6 +7,7 @@
 
 namespace slam_class
 {
+	
 class Map
 {
 public:
@@ -14,10 +15,10 @@ public:
     unordered_map<unsigned long, MapPoint* >  map_points;        // all landmarks
     unordered_map<unsigned long, Frame*>     key_frames;             // all key-frames
 
-    Map() {}
     
     void insertKeyFrame( Frame* frame );
     void insertMapPoint( MapPoint* map_point );
+    
 };
 
 

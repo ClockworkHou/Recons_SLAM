@@ -12,7 +12,7 @@ namespace slam_class
       double fx, fy, cx, cy;
       //double depth_scale;//for RGBD camera
       
-      Camera_Intrinsics();
+      //Camera_Intrinsics();
      
       void setValue (double _fx, double _fy, double _cx, double _cy)
       {fx = _fx;fy = _fy; cx = _cx; cy = _cy;}

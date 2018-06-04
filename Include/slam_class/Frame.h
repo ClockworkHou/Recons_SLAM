@@ -24,7 +24,7 @@ namespace slam_class
 			SE3 _T_c_w, Camera* _camera,
 			Mat _rgbImg,bool _isKey
 		)
-		: id(_id), time_stamp(_time_stamp), T_c_w(_T_c_w), camera(_camera), rgbImg(_rgbImg), is_key_frame(_isKey)
+		: id(_id), time_stamp(_time_stamp), T_c_w(_T_c_w), camera(_camera), rgbImg(_rgbImg), isKey(_isKey)
 		{}
 		
 		void setValue(unsigned long _id,double _time_stamp, SE3 _T_c_w, Camera* _camera,Mat _rgbImg,bool _isKey);

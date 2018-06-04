@@ -5,5 +5,4 @@ namespace slam_class
 {
 	
 
-
 }

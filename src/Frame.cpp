@@ -26,11 +26,11 @@ Vector3d Frame::getCamCenter() const
 
 bool Frame::isInFrame ( const Vector3d& pt_world )
 {
-		Vector3d p_cam = camera_->world2camera( pt_world, T_c_w );
+		Vector3d p_cam = camera->world2camera( pt_world, T_c_w );
 		 
 		if ( p_cam(2,0) < 0 ) return false;
 		
-		Vector2d pixel = camera_->world2pixel( pt_world, T_c_w );
+		Vector2d pixel = camera->world2pixel( pt_world, T_c_w );
 		
 		return (pixel(0,0)>0 
 		       && pixel(1,0)>0 
