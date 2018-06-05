@@ -23,7 +23,7 @@ namespace slam_class
   public:
 	  Camera_Intrinsics  intrinsics;
 	  
-	  Camera();
+	  Camera(){};
 	  
 	  void setIntrinsics(double _fx, double _fy, double _cx, double _cy);
 	  

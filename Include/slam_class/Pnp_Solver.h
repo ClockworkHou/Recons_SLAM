@@ -13,7 +13,8 @@ class Pnp_Solver
 public:
 	Map* Global_Map;
 	Map* Local_Map;
-	int cur_frame_id;
+	unsigned long cur_frame_id;
+	unsigned long ref_frame_id;
 	vector<DMatch> match;
 	vector<DMatch> matches;
 	
@@ -25,9 +26,11 @@ public:
 	vector< Point2f > points_2d;
 	//triangulation
 	vector<Point3d> points;
-	vector<Point2f> pts_1, pts_2;
+	vector<Point2d> pts_1;
+	vector<Point2d> pts_2;
 	vector<Mat>  descriptors_buf;
 	vector<unsigned long> delete_list;
+	
 	 
 	~Pnp_Solver()
 	{
@@ -39,8 +42,8 @@ public:
 		points.clear();
 		points_2d.clear();
 		points_3d.clear();
-		pts_1.clear();
-		pts_2.clear();
+		//pts_1.clear();
+		//pts_2.clear();
 		descriptors_buf.clear();
 		delete_list.clear();
 	}
@@ -51,11 +54,11 @@ public:
        				);
 	Point2d pixel2cam ( const Point2d & p, const Mat& K );
 	
-	
+	/*
 	 void bundleAdjustment (
 		const Mat& K,
 		Mat& R, Mat& t );
-	
+	*/
 	void triangulate(
 		const Mat & img_1,
 		const Mat & img_2,
@@ -68,6 +71,13 @@ public:
 	void Solve_Pnp (unordered_map<unsigned long, Frame*>::iterator it1, 
 						unordered_map<unsigned long, Frame*>::iterator it2
 	);
+	void Solve_2d2d (unordered_map<unsigned long, Frame*>::iterator it1, 
+						unordered_map<unsigned long, Frame*>::iterator it2
+	);
+	void pose_estimation_2d2d ( std::vector<KeyPoint> keypoints_1,
+                            std::vector<KeyPoint> keypoints_2,
+                            std::vector< DMatch > matches,
+                            Mat& R, Mat& t );
 	void run();
 	void update_local_map();
 	

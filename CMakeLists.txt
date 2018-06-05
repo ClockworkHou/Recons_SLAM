@@ -38,15 +38,16 @@ include_directories(${G20_INCLUDE_DIRS})
 #target_link_libraries(recons_slam g2o_core g2o_stuff)
 
 #PCL
-#find_package(PCL REQUIRED COMPONENT common io)
-#message(STATUS "    PCL include path:  ${PCL_INCLUDE_DIRS}")
-#include_directories(${PCL_INCLUDE_DIRS})
+find_package(PCL REQUIRED COMPONENT common io)
+message(STATUS "    PCL include path:  ${PCL_INCLUDE_DIRS}")
+include_directories(${PCL_INCLUDE_DIRS})
 #add_definitions(${PCL_DEFINITIONS})
 #target_link_libraries(recons_slam ${PCL_LIBRARIES})
 
 set( THIRD_PARTY_LIBS 
     ${OpenCV_LIBS}
     ${Sophus_LIBRARIES}
+    ${PCL_LIBRARIES}
     g2o_core g2o_stuff g2o_types_sba
 )
 ##############################################################

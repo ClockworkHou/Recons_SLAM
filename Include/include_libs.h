@@ -26,6 +26,9 @@ using Sophus::SE3;
 #include <g2o/core/optimization_algorithm_levenberg.h>
 #include <g2o/solvers/csparse/linear_solver_csparse.h>
 #include <g2o/types/sba/types_six_dof_expmap.h>
+#include<opencv2/opencv.hpp>  
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/videoio/videoio.hpp>
 #include <chrono>
 
 using namespace cv;
@@ -40,6 +43,12 @@ using cv::Mat;
 #include <set>
 #include <unordered_map>
 #include <map>
+
+
+//pcl
+#include <pcl/io/pcd_io.h>  
+#include <pcl/point_types.h>  
+#include <pcl/visualization/cloud_viewer.h>  
 
 using namespace std; 
 #endif

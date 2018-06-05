@@ -4,10 +4,7 @@
 namespace slam_class
 {
     
-Camera::Camera()
-{
-    
-}
+
  void Camera::setIntrinsics(double _fx, double _fy, double _cx, double _cy)
  {
 	intrinsics.setValue ( _fx,  _fy, _cx,  _cy);

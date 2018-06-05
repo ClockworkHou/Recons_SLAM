@@ -5,20 +5,18 @@
 
 #include"../include_libs.h"
 #include"Map.h"
-
+#include"Camera.h"
 
 namespace slam_class
 {
 	
 class Input_Handler
 {
+public:
 	Map* Global_Map;
 	
+	void run(char* filename);
 };
-
-
-
-
 
 
 

@@ -17,8 +17,8 @@ void Triangulation_Solver::find_feature_matches ( const Mat& img_1, const Mat& i
 						)
 {
    
-    Ptr<FeatureDetector> detector = ORB::create();
-    Ptr<DescriptorExtractor> descriptor = ORB::create();
+    Ptr<FeatureDetector> detector = ORB::create(1000);
+    Ptr<DescriptorExtractor> descriptor = ORB::create(1000);
     
     Ptr<DescriptorMatcher> matcher  = DescriptorMatcher::create ( "BruteForce-Hamming" );
     //Oriented FAST 
@@ -79,7 +79,7 @@ void Triangulation_Solver::pose_estimation_2d2d ( std::vector<KeyPoint> keypoint
 	        0, camera_Intrinsics_FY, camera_Intrinsics_CY, 
 	        0, 0, 1 );
     
-    //匹配点转换为vector<Point2f>的形式
+    //匹配点转换为vector<Point2d>的形式
     vector<Point2f> points1;
     vector<Point2f> points2;
 
@@ -126,11 +126,11 @@ void Triangulation_Solver::triangulate (
     vector<Mat> & descriptors
 )
 {
-    Mat T1 = (Mat_<float> (3,4) <<
+    Mat T1 = (Mat_<double> (3,4) <<
         1,0,0,0,
         0,1,0,0,
         0,0,1,0);
-    Mat T2 = (Mat_<float> (3,4) <<
+    Mat T2 = (Mat_<double> (3,4) <<
         R.at<double>(0,0), R.at<double>(0,1), R.at<double>(0,2), t.at<double>(0,0),
         R.at<double>(1,0), R.at<double>(1,1), R.at<double>(1,2), t.at<double>(1,0),
         R.at<double>(2,0), R.at<double>(2,1), R.at<double>(2,2), t.at<double>(2,0)
@@ -141,13 +141,39 @@ void Triangulation_Solver::triangulate (
 		camera_Intrinsics_FX, 0, camera_Intrinsics_CX, 
 	        0, camera_Intrinsics_FY, camera_Intrinsics_CY, 
 	        0, 0, 1 );
-    vector<Point2f> pts_1, pts_2;
+    vector<Point2d> pts_1, pts_2;
+    //Mat pts_1, pts_2;
+    int i = 0;
+    
+    //对极约束
+    Mat t_x = ( Mat_<double> ( 3,3 ) <<
+                0,                      -t.at<double> ( 2,0 ),     t.at<double> ( 1,0 ),
+                t.at<double> ( 2,0 ),      0,                      -t.at<double> ( 0,0 ),
+                -t.at<double> ( 1.0 ),     t.at<double> ( 0,0 ),      0 );
+    /*for ( DMatch m: matches )
+    {
+        Point2d pt1 = pixel2cam ( keypoints_1[ m.queryIdx ].pt, K );
+        Mat y1 = ( Mat_<double> ( 3,1 ) << pt1.x, pt1.y, 1 );
+        Point2d pt2 = pixel2cam ( keypoints_2[ m.trainIdx ].pt, K );
+        Mat y2 = ( Mat_<double> ( 3,1 ) << pt2.x, pt2.y, 1 );
+        Mat d = y2.t() * t_x * R * y1;
+        //cout << "epipolar constraint = " << d << endl;
+    }*/
+      
     for ( DMatch m:matches )
     {
-        // 像素坐标2相机坐标
-        pts_1.push_back ( pixel2cam( keypoint_1[m.queryIdx].pt, K) );
-        pts_2.push_back ( pixel2cam( keypoint_2[m.trainIdx].pt, K) );
+        Point2d pt1 = pixel2cam ( keypoint_1[ m.queryIdx ].pt, K );
+        Mat y1 = ( Mat_<double> ( 3,1 ) << pt1.x, pt1.y, 1 );
+        Point2d pt2 = pixel2cam ( keypoint_2[ m.trainIdx ].pt, K );
+        Mat y2 = ( Mat_<double> ( 3,1 ) << pt2.x, pt2.y, 1 );
+        Mat d = y2.t() * t_x * R * y1;
+	if(abs(d.at<double>(0,0)) <0.1)
+	{
+        pts_1.push_back ( pt1 );
+        pts_2.push_back ( pt2 );
 	descriptors.push_back(descriptors_1.row(m.queryIdx).clone());
+	}
+	else cout << "Point droped" << endl;
     }
     
     Mat pts_4d;
@@ -157,11 +183,11 @@ void Triangulation_Solver::triangulate (
     for ( int i=0; i<pts_4d.cols; i++ )
     {
         Mat x = pts_4d.col(i);
-        x /= x.at<float>(3,0); // 归一化
+        x /= x.at<double>(3,0); // 归一化
         Point3d p (
-            x.at<float>(0,0), 
-            x.at<float>(1,0), 
-            x.at<float>(2,0) 
+            x.at<double>(0,0), 
+            x.at<double>(1,0), 
+            x.at<double>(2,0) 
         );
         points.push_back( p );
     }
@@ -213,7 +239,7 @@ void  Triangulation_Solver:: initialize ()
 	*/
     //cout<<"t^R="<<endl<<t_x*R<<endl;
 
-    //-- 验证对极约束
+    //验证对极约束
     //Mat K = ( Mat_<double> ( 3,3 ) << 520.9, 0, 325.1, 0, 521.0, 249.7, 0, 0, 1 );
     /*Mat K = ( Mat_<double> ( 3,3 ) << 
 		camera_Intrinsics_FX, 0, camera_Intrinsics_CX, 
@@ -243,7 +269,12 @@ void  Triangulation_Solver:: initialize ()
     for( int i = 0; i < points.size(); i++)
     {
 	    MapPoint * tmp = new MapPoint();
-	    tmp->id = i;
+	     if( abs(points.at(i).x) > BADPOINT_THRESHOLD ||
+		    abs(points.at(i).y) > BADPOINT_THRESHOLD ||
+		    abs(points.at(i).z) >BADPOINT_THRESHOLD)
+		    continue;
+	     
+	    tmp->id = Global_Map->map_points.size();
 	    tmp->pos(0,0) = points.at(i).x;
 	    tmp->pos(1,0) = points.at(i).y;
 	    tmp->pos(2,0) = points.at(i).z;
