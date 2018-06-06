@@ -24,8 +24,8 @@ public:
 	vector<KeyPoint> keypoints_2;
 	vector< Point3d > points_3d;
 	vector< Point2d> points_2d;
-	vector<Point2d> points1;
-	vector<Point2d> points2;
+	vector<Point2f> points1;
+	vector<Point2f> points2;
 	//triangulation
 	vector<Point3d> points;
 	vector<Point2d> pts_1;
@@ -36,11 +36,7 @@ public:
 	 
 	Point2d pixel2cam ( const Point2d & p, const Mat& K );
 	
-	/*
-	 void bundleAdjustment (
-		const Mat& K,
-		Mat& R, Mat& t );
-	*/
+	
 	void find_feature_matches ( const Mat& img_1, const Mat& img_2,
                             std::vector<KeyPoint>& keypoints_1,
                             std::vector<KeyPoint>& keypoints_2,

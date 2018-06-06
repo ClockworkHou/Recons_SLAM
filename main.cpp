@@ -47,7 +47,7 @@ int main(int argc, char **argv)
     
     cout << "开始显示地图..." << endl;
     
-    map_viewer.run();
+    map_viewer.run(argv[2]);
     
     return 0;
 }

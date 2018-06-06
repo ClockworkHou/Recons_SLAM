@@ -1,158 +1,11 @@
 #include"../Include/slam_class/Pnp_Solver.h"
 #include"../Include/slam_class/config_hc.h"
-
 #include <iostream>
 
 
 namespace slam_class 
 {
-void Pnp_Solver::Solve_2d2d (unordered_map<unsigned long, Frame*>::iterator it1, 
-						unordered_map<unsigned long, Frame*>::iterator it2
-)
-{
-   Mat img_1 = it1->second->rgbImg;
-   Mat img_2 = it2->second->rgbImg;
-   
-   keypoints.clear();
-   
-    matches.clear();
-    
-    Mat descriptors_2;
-    Mat map_descriptors;
-    unsigned long * descriptors_id = new unsigned long[Local_Map->map_points.size()];
-    int tmp_cnt = 0;
-    unordered_map<unsigned long, MapPoint* >::iterator tmp_it;
-    //for( int i = 0; i < Local_Map->map_points.size(); i++)
-    for( tmp_it = Local_Map->map_points.begin(); tmp_it != Local_Map->map_points.end(); tmp_it++)
-    {
-		//Mat tmp_des = Local_Map->map_points.at(i)->descriptor;
-	        Mat tmp_des = tmp_it->second->descriptor;
-		map_descriptors.push_back(tmp_des);
-		descriptors_id[tmp_cnt++] = tmp_it->second->id;
-		//map_descriptors.row(i) = tmp_des;
-    }
-    
-    find_feature_matches ( img_2, map_descriptors ,descriptors_2);
-    
-    Mat K = ( Mat_<double> ( 3,3 ) << 
-		camera_Intrinsics_FX, 0, camera_Intrinsics_CX, 
-	        0, camera_Intrinsics_FY, camera_Intrinsics_CY, 
-	        0, 0, 1 );
-    points_3d.clear();
-    points_2d.clear();
-    for ( DMatch m:matches )
-    {
-		tmp_it = Local_Map->map_points.find(descriptors_id[m.queryIdx]);
-		tmp_it->second->observed_frames.push_back(it2->second);
-	//Local_Map->map_points.at(m.queryIdx)->observed_frames.push_back(it2->second);
-        //MapPoint* p1 = Local_Map->map_points.at(m.queryIdx);
-		MapPoint* p1 = tmp_it->second;
-		points_3d.push_back ( Point3f ( p1->pos(0,0), p1->pos(1,0), p1->pos(2,0) )  );
-		points_2d.push_back ( keypoints[m.trainIdx].pt );
-    }
 
-    cout<<"3d-2d pairs: "<<points_3d.size() <<endl;
-
-    Mat r, t, inliers;
-    solvePnPRansac ( points_3d, points_2d, K, Mat(), r, t, false,100, 1, 0.99, inliers ); // 调用OpenCV 的 PnP 求解
-    //solvePnP( points_3d, points_2d, K, Mat(), r, t);
-    Mat R;
-    cv::Rodrigues ( r, R ); // r为旋转向量形式，用Rodrigues公式转换为矩阵
-
-   cout<<"R="<<endl<<R<<endl;
-   cout<<"t="<<endl<<t<<endl;
-    //double threshold = Global_Map->key_frames.find(ref_frame_id)
-    //if(t.at(0,0) > 
-    //优化位姿
-    //bundleAdjustment (  K, R, t );
-    
-    //更新局部地图
-    
-    //寻找没有匹配的特征点
-    bool * rest_points = new bool[ keypoints.size()];
-    for( int  i= 0; i < keypoints.size(); i++) 
-	    rest_points[i] = true;
-    for ( DMatch m:matches )
-	   // rest_points[m.trainIdx] = false;
-    
-    keypoints_1.clear();
-    keypoints_2.clear();
-    
-    for( int  i= 0; i < keypoints.size(); i++)
-    {
-	    if(rest_points[i]) 
-	    {
-		    KeyPoint tmp = keypoints.at(i);
-		    keypoints_2.push_back(tmp);
-	    }
-    }
-    //cout << keypoints_2.size() << endl;
-    delete rest_points;
-    //更新cur frame 的位姿
-    SE3 se3_Tcw1 = it1->second->T_c_w;
-    
-    MatrixXd tmp_m = se3_Tcw1.matrix();
-    Mat Tcw1 = (Mat_<double> (4,4) <<
-         tmp_m(0,0), tmp_m(0,1), tmp_m(0,2),tmp_m(0,3),
-         tmp_m(1,0), tmp_m(1,1), tmp_m(1,2),tmp_m(1,3),
-         tmp_m(2,0), tmp_m(2,1), tmp_m(2,2),tmp_m(2,3),
-		0,0,0,1
-    );
-    Mat Tcw2 = (Mat_<double> (4,4) <<
-        R.at<double>(0,0), R.at<double>(0,1), R.at<double>(0,2), t.at<double>(0,0),
-        R.at<double>(1,0), R.at<double>(1,1), R.at<double>(1,2), t.at<double>(1,0),
-        R.at<double>(2,0), R.at<double>(2,1), R.at<double>(2,2), t.at<double>(2,0),
-		0,0,0,1
-    );
-    //Tcw2 = Tcw2 * Tcw1;
-    
-    Matrix3d rotation;
-    rotation << Tcw2.at<double>(0,0), Tcw2.at<double>(0,1),  Tcw2.at<double>(0,2), 
-			Tcw2.at<double>(1,0), Tcw2.at<double>(1,1),  Tcw2.at<double>(1,2),
-			Tcw2.at<double>(2,0), Tcw2.at<double>(2,1),  Tcw2.at<double>(2,2);
-   Vector3d translation;
-   translation << Tcw2.at<double>(0,3), Tcw2.at<double>(1,3), Tcw2.at<double>(2,3);
-			
-    it2->second->T_c_w = SE3(rotation, translation);
-    
-    
-    points.clear();
-    descriptors_buf.clear();
-    
-    triangulate(img_1, img_2, 
-		R,t,
-		it1->second->T_c_w,
-		it2->second->T_c_w
-       	);
-    //保存地标点
-    for( int i = 0; i < points.size(); i++)
-    {
-	    MapPoint * tmp = new MapPoint();
-	    tmp->id =  Global_Map->map_points.size();
-	   
-	    if( abs(points.at(i).x) > BADPOINT_THRESHOLD ||
-		    abs(points.at(i).y) > BADPOINT_THRESHOLD ||
-		    abs(points.at(i).z) >BADPOINT_THRESHOLD)
-		    continue;
-		    
-	    tmp->pos(0,0) = points.at(i).x;
-	    tmp->pos(1,0) = points.at(i).y;
-	    tmp->pos(2,0) = points.at(i).z;
-	    tmp->is_good = true;
-	    
-	    tmp->observed_frames.push_back(it1->second);
-	    tmp->observed_frames.push_back(it2->second);
-	    
-	    tmp->descriptor = descriptors_buf.at(i);
-	    tmp->matched_times = 1;
-	    tmp->visible_times = 1; 
-	    Global_Map->insertMapPoint(tmp);
-	    Local_Map->insertMapPoint(tmp);
-	    
-    }
-    //更新局部地图
-     Local_Map->insertKeyFrame(it2->second);
-}
 void Pnp_Solver::Solve_Pnp (unordered_map<unsigned long, Frame*>::iterator it1, 
 						unordered_map<unsigned long, Frame*>::iterator it2
 )
@@ -161,7 +14,6 @@ void Pnp_Solver::Solve_Pnp (unordered_map<unsigned long, Frame*>::iterator it1,
    Mat img_2 = it2->second->rgbImg;
    
    keypoints.clear();
-   
     matches.clear();
     
     Mat descriptors_2;
@@ -169,14 +21,12 @@ void Pnp_Solver::Solve_Pnp (unordered_map<unsigned long, Frame*>::iterator it1,
     unsigned long * descriptors_id = new unsigned long[Local_Map->map_points.size()];
     int tmp_cnt = 0;
     unordered_map<unsigned long, MapPoint* >::iterator tmp_it;
-    //for( int i = 0; i < Local_Map->map_points.size(); i++)
+    
     for( tmp_it = Local_Map->map_points.begin(); tmp_it != Local_Map->map_points.end(); tmp_it++)
-    {
-		//Mat tmp_des = Local_Map->map_points.at(i)->descriptor;
+    {	
 	        Mat tmp_des = tmp_it->second->descriptor;
 		map_descriptors.push_back(tmp_des);
-		descriptors_id[tmp_cnt++] = tmp_it->second->id;
-		//map_descriptors.row(i) = tmp_des;
+		descriptors_id[tmp_cnt++] = tmp_it->second->id;	
     }
     //cout << map_descriptors << endl;
     find_feature_matches ( img_2, map_descriptors ,descriptors_2);
@@ -191,28 +41,33 @@ void Pnp_Solver::Solve_Pnp (unordered_map<unsigned long, Frame*>::iterator it1,
     {
 		tmp_it = Local_Map->map_points.find(descriptors_id[m.queryIdx]);
 		tmp_it->second->observed_frames.push_back(it2->second);
-	//Local_Map->map_points.at(m.queryIdx)->observed_frames.push_back(it2->second);
-        //MapPoint* p1 = Local_Map->map_points.at(m.queryIdx);
+	
 		MapPoint* p1 = tmp_it->second;
-		points_3d.push_back ( Point3f ( p1->pos(0,0), p1->pos(1,0), p1->pos(2,0) )  );
-		points_2d.push_back ( keypoints[m.trainIdx].pt );
+		points_3d.push_back ( Point3d( p1->pos(0,0), p1->pos(1,0), p1->pos(2,0) )  );
+		points_2d.push_back ( Point2d(keypoints[m.trainIdx].pt.x , keypoints[m.trainIdx].pt.y));
     }
 
-    cout<<"3d-2d pairs: "<<points_3d.size() <<endl;
+    //cout<<"3d-2d pairs: "<<points_3d.size() <<endl;
 
     Mat r, t, inliers;
-    //solvePnPRansac ( points_3d, points_2d, K, Mat(), r, t, false,100, 4, 0.99, inliers ); // 调用OpenCV 的 PnP 求解
-    solvePnP( points_3d, points_2d, K, Mat(), r, t);
+    solvePnPRansac ( points_3d, points_2d, K, Mat(), r, t, false,100, 4.0, 0.99, inliers ); // 调用OpenCV 的 PnP 求解
+    //solvePnP( points_3d, points_2d, K, Mat(), r, t);
+    
     Mat R;
     cv::Rodrigues ( r, R ); // r为旋转向量形式，用Rodrigues公式转换为矩阵
 
-   cout<<"R="<<endl<<R<<endl;
-   cout<<"t="<<endl<<t<<endl;
     //double threshold = Global_Map->key_frames.find(ref_frame_id)
     //if(t.at(0,0) > 
     //优化位姿
-    //bundleAdjustment (  K, R, t );
-    
+    //cout << "debug" << endl;
+    //cout << points_3d.size() << endl;
+    //cout << points_2d.size() << endl;
+    //cout << K << endl;
+    //cout << R << endl;
+    //cout << t<< endl;
+   //bundleAdjustment (  K, R, t );
+    cout<<"R="<<endl<<R<<endl;
+    cout<<"t="<<endl<<t<<endl;
     //更新局部地图
     
     //寻找没有匹配的特征点
@@ -272,15 +127,26 @@ void Pnp_Solver::Solve_Pnp (unordered_map<unsigned long, Frame*>::iterator it1,
 		it2->second->T_c_w
        	);
     //保存地标点
+     SE3 se3_Tcw2 = it1->second->T_c_w;
+    MatrixXd tmp_t = se3_Tcw2.translation();
+    double cx = tmp_t(0,0);
+    double cy = tmp_t(1,0);
+    double cz = tmp_t(2,0);
+    
     for( int i = 0; i < points.size(); i++)
     {
-	    MapPoint * tmp = new MapPoint();
-	    tmp->id =  Global_Map->map_points.size();
 	   
 	    if( abs(points.at(i).x) > BADPOINT_THRESHOLD ||
 		    abs(points.at(i).y) > BADPOINT_THRESHOLD ||
 		    abs(points.at(i).z) >BADPOINT_THRESHOLD)
 		    continue;
+	   double d = ((points.at(i).x-cx) *(points.at(i).x-cx) 
+		     +  (points.at(i).y-cy) *(points.at(i).y-cy) 
+		     +  (points.at(i).z-cz) *(points.at(i).z-cz));
+	     if  ( d > BADPOINT_THRESHOLD || d < 0.05) continue;
+	     
+	      MapPoint * tmp = new MapPoint();
+	     tmp->id =  Global_Map->map_points.size();
 		    
 	    tmp->pos(0,0) = points.at(i).x;
 	    tmp->pos(1,0) = points.at(i).y;
@@ -311,8 +177,8 @@ void Pnp_Solver::triangulate(
 )
 {
     
-    Ptr<FeatureDetector> detector = ORB::create();
-    Ptr<DescriptorExtractor> descriptor = ORB::create();
+    Ptr<FeatureDetector> detector = ORB::create(1000);
+    Ptr<DescriptorExtractor> descriptor = ORB::create(1000);
     Ptr<DescriptorMatcher> matcher  = DescriptorMatcher::create ( "BruteForce-Hamming" );
   
     match.clear();
@@ -366,29 +232,35 @@ void Pnp_Solver::triangulate(
     
     pts_1.clear();
     pts_2.clear();
-    int N = matches.size();
-    if(N == 0) return;
-	//cv::Mat pts_4d(1,N,CV_64FC4);
-	//cv::Mat pts_1(1,N,CV_64FC2);
-	//cv::Mat pts_2(1,N,CV_64FC2);
+    
 	int i = 0;
+    Mat t_x = ( Mat_<double> ( 3,3 ) <<
+                0,                      -t.at<double> ( 2,0 ),     t.at<double> ( 1,0 ),
+                t.at<double> ( 2,0 ),      0,                      -t.at<double> ( 0,0 ),
+                -t.at<double> ( 1.0 ),     t.at<double> ( 0,0 ),      0 );
+    
     for ( DMatch m:matches )
     {
         // 像素坐标2相机坐标
-	  /*  Point2d k1 =  pixel2cam( keypoints_1[m.queryIdx].pt, K) ;
-	    Point2d k2 =  pixel2cam( keypoints_2[m.trainIdx].pt, K);
-	    pts_1.at<double>(0,i) = k1.x;
-	    pts_1.at<double>(1,i) = k1.y;
-	    pts_2.at<double>(0,i) = k2.x;
-	    pts_2.at<double>(1,i) = k2.y;
-	    i++;*/
+	 Point2d pt1 = pixel2cam ( keypoints_1[ m.queryIdx ].pt, K );
+        Mat y1 = ( Mat_<double> ( 3,1 ) << pt1.x, pt1.y, 1 );
+        Point2d pt2 = pixel2cam ( keypoints_2[ m.trainIdx ].pt, K );
+        Mat y2 = ( Mat_<double> ( 3,1 ) << pt2.x, pt2.y, 1 );
+        Mat d = y2.t() * t_x * R * y1;
+	if(abs(d.at<double>(0,0)) <0.1)
+	{
         pts_1.push_back ( pixel2cam( keypoints_1[m.queryIdx].pt, K) );
         pts_2.push_back ( pixel2cam( keypoints_2[m.trainIdx].pt, K) );
 	descriptors_buf.push_back(descriptors_1.row(m.queryIdx).clone());
+	}
+	else cout << "Point droped" << endl;
     }
     
     Mat pts_4d;
-
+    int N = pts_1.size();
+    
+    if(N == 0) return;
+	
 //cout << "debugtag" << endl; 
     cv::triangulatePoints( T1, T2, pts_1, pts_2, pts_4d );
 //cout << "debugtag" << endl; 
@@ -456,19 +328,28 @@ Point2d Pnp_Solver::pixel2cam ( const Point2d& p, const Mat& K )
            );
 }
 
-/*
+
  void Pnp_Solver::bundleAdjustment (
     const Mat& K,
     Mat& R, Mat& t )
 {
     // 初始化g2o
-    typedef g2o::BlockSolver< g2o::BlockSolverTraits<6,3> > Block;  // pose 维度为 6, landmark 维度为 3
+    /*typedef g2o::BlockSolver< g2o::BlockSolverTraits<6,3> > Block;  // pose 维度为 6, landmark 维度为 3
     Block::LinearSolverType* linearSolver = new g2o::LinearSolverCSparse<Block::PoseMatrixType>(); // 线性方程求解器
     Block* solver_ptr = new Block ( linearSolver );     // 矩阵块求解器
     g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg ( solver_ptr );
     g2o::SparseOptimizer optimizer;
-    optimizer.setAlgorithm ( solver );
-
+    optimizer.setAlgorithm ( solver );*/
+    
+    
+    typedef g2o::BlockSolver< g2o::BlockSolverTraits<3,1> > Block;
+	Block::LinearSolverType* linearSolver = new g2o::LinearSolverDense<Block::PoseMatrixType>();
+	Block* solver_ptr = new Block( std::unique_ptr<Block::LinearSolverType>(linearSolver) );
+	g2o::OptimizationAlgorithmLevenberg* solver = new g2o::OptimizationAlgorithmLevenberg(std::unique_ptr<Block>(solver_ptr) );
+	g2o::SparseOptimizer optimizer;   
+	optimizer.setAlgorithm( solver );   
+	optimizer.setVerbose( true ); 
+	
     // vertex
     g2o::VertexSE3Expmap* pose = new g2o::VertexSE3Expmap(); // camera pose
    Matrix3d R_mat;
@@ -484,12 +365,12 @@ Point2d Pnp_Solver::pixel2cam ( const Point2d& p, const Mat& K )
     optimizer.addVertex ( pose );
 
     int index = 1;
-    for ( const Point3f p:points_3d )   // landmarks
+    for ( const Point3d p:points_3d )   // landmarks
     {
         g2o::VertexSBAPointXYZ* point = new g2o::VertexSBAPointXYZ();
         point->setId ( index++ );
         point->setEstimate (Vector3d ( p.x, p.y, p.z ) );
-        point->setMarginalized ( true ); // g2o 中必须设置 marg 参见第十讲内容
+        point->setMarginalized ( true ); 
         optimizer.addVertex ( point );
     }
 
@@ -502,7 +383,7 @@ Point2d Pnp_Solver::pixel2cam ( const Point2d& p, const Mat& K )
 
     // edges
     index = 1;
-    for ( const Point2f p:points_2d )
+    for ( const Point2d p:points_2d )
     {
         g2o::EdgeProjectXYZ2UV* edge = new g2o::EdgeProjectXYZ2UV();
         edge->setId ( index );
@@ -516,20 +397,18 @@ Point2d Pnp_Solver::pixel2cam ( const Point2d& p, const Mat& K )
         index++;
     }
 
-    chrono::steady_clock::time_point t1 = chrono::steady_clock::now();
+    //chrono::steady_clock::time_point t1 = chrono::steady_clock::now();
     optimizer.setVerbose ( true );
     optimizer.initializeOptimization();
     optimizer.optimize ( 100 );
-    chrono::steady_clock::time_point t2 = chrono::steady_clock::now();
-    chrono::duration<double> time_used = chrono::duration_cast<chrono::duration<double>> ( t2-t1 );
+    //chrono::steady_clock::time_point t2 = chrono::steady_clock::now();
+    //chrono::duration<double> time_used = chrono::duration_cast<chrono::duration<double>> ( t2-t1 );
    // cout<<"optimization costs time: "<<time_used.count() <<" seconds."<<endl;
 
     //cout<<endl<<"after optimization:"<<endl;
-   // cout<<"T="<<endl<<Isometry3d ( pose->estimate() ).matrix() <<endl;
+    //cout<<"T="<<endl<<Isometry3d ( pose->estimate() ).matrix() <<endl;
 }
-*/
-	
-	
+		
 	
 void Pnp_Solver::update_local_map()
 {

@@ -14,5 +14,26 @@ Environment Profile=
 Extra Arguments=
 Install Directory=file:///usr/local
 
+[Launch]
+Launch Configurations=Launch Configuration 0
+
+[Launch][Launch Configuration 0]
+Configured Launch Modes=execute
+Configured Launchers=nativeAppLauncher
+Name=recons_slam_main
+Type=Native Application
+
+[Launch][Launch Configuration 0][Data]
+Arguments=
+Dependencies=@Variant(\x00\x00\x00\t\x00\x00\x00\x00\x01\x00\x00\x00\x0b\x00\x00\x00\x00\x02\x00\x00\x00\x16\x00R\x00e\x00c\x00o\x00n\x00s\x00_\x00S\x00L\x00A\x00M\x00\x00\x00 \x00r\x00e\x00c\x00o\x00n\x00s\x00_\x00s\x00l\x00a\x00m\x00_\x00m\x00a\x00i\x00n)
+Dependency Action=Build
+EnvironmentGroup=default
+Executable=file:///home/hou/Hou%20Chen/SLAM/Recons_SLAM/
+External Terminal=konsole --noclose --workdir %workdir -e %exe
+Project Target=Recons_SLAM,recons_slam_main
+Use External Terminal=false
+Working Directory=
+isExecutable=false
+
 [Project]
 VersionControlSupport=kdevgit

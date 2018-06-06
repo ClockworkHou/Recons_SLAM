@@ -12,7 +12,7 @@
 #define camera_Intrinsics_CY        247.6 
 */
 #define LOCALMAP_FRAMES	5
-#define BADPOINT_THRESHOLD  200
+#define BADPOINT_THRESHOLD  500
 
 //unordered_map<unsigned long, Frame*>::iterator
 //unordered_map<unsigned long, MapPoint*>::iterator

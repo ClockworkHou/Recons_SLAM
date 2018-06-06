@@ -4,7 +4,7 @@
 
 namespace slam_class 
 {
-void Map_Viewer::run()
+void Map_Viewer::run(char* filename)
 {
 	
 	pcl::PointCloud<pcl::PointXYZ> cloud; 
@@ -28,7 +28,7 @@ void Map_Viewer::run()
 		//cout <<  Global_Map->map_points.at(i)->pos(2, 0)<< endl;
 	}  
 	
-	pcl::io::savePCDFileASCII ("test_pcd.pcd", cloud);  
+	pcl::io::savePCDFileASCII (filename, cloud);  
 	//std::cerr << "Saved " << cloud.points.size () << " data points to test_pcd.pcd." << std::endl;  
 	
 	//pcl::visualization::CloudViewer viewer("Simple Cloud Viewer");//直接创造一个显示窗口 

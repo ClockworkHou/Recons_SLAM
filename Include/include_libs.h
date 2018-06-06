@@ -26,6 +26,9 @@ using Sophus::SE3;
 #include <g2o/core/optimization_algorithm_levenberg.h>
 #include <g2o/solvers/csparse/linear_solver_csparse.h>
 #include <g2o/types/sba/types_six_dof_expmap.h>
+#include <g2o/solvers/dense/linear_solver_dense.h>
+#include <g2o/core/robust_kernel.h>
+#include <g2o/core/robust_kernel_impl.h>
 #include<opencv2/opencv.hpp>  
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/videoio/videoio.hpp>
@@ -43,6 +46,8 @@ using cv::Mat;
 #include <set>
 #include <unordered_map>
 #include <map>
+#include <algorithm>
+#include <boost/timer.hpp>
 
 
 //pcl

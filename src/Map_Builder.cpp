@@ -234,8 +234,8 @@ void Map_Builder::pose_estimation_2d2d (
     }
 
     //基础矩阵
-   // Mat fundamental_matrix;
-    //fundamental_matrix = findFundamentalMat ( points1, points2, CV_FM_8POINT );
+   Mat fundamental_matrix;
+    fundamental_matrix = findFundamentalMat ( points1, points2, CV_FM_8POINT );
     //cout<<"fundamental_matrix is "<<endl<< fundamental_matrix<<endl;
 
     //本质矩阵
@@ -247,16 +247,16 @@ void Map_Builder::pose_estimation_2d2d (
     cout<<"essential_matrix is "<<endl<< essential_matrix<<endl;
 
     //单应矩阵
-    /*
+    
     Mat homography_matrix;
     homography_matrix = findHomography ( points1, points2, RANSAC, 3 );
     cout<<"homography_matrix is "<<endl<<homography_matrix<<endl;
-    */
+    
     
     //本质矩阵 恢复旋转和平移
     recoverPose ( essential_matrix, points1, points2, R, t, focal_length, principal_point );
-   // cout<<"R ： "<<endl<<R<<endl;
-   // cout<<"t ： "<<endl<<t<<endl;
+    cout<<"R ： "<<endl<<R<<endl;
+    cout<<"t ： "<<endl<<t<<endl;
     
 }	
 

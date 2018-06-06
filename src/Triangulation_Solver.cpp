@@ -1,6 +1,7 @@
 
 #include"../Include/slam_class/Triangulation_Solver.h"
 #include"../Include/slam_class/config_hc.h"
+
 #include <iostream>
 
 
@@ -90,9 +91,9 @@ void Triangulation_Solver::pose_estimation_2d2d ( std::vector<KeyPoint> keypoint
     }
 
     //基础矩阵
-   // Mat fundamental_matrix;
-    //fundamental_matrix = findFundamentalMat ( points1, points2, CV_FM_8POINT );
-    //cout<<"fundamental_matrix is "<<endl<< fundamental_matrix<<endl;
+    Mat fundamental_matrix;
+    fundamental_matrix = findFundamentalMat ( points1, points2, CV_FM_8POINT );
+    cout<<"fundamental_matrix is "<<endl<< fundamental_matrix<<endl;
 
     //本质矩阵
     Point2d principal_point ( K.at<double>(0,2), K.at<double>(1,2) );	//相机光心
@@ -103,16 +104,17 @@ void Triangulation_Solver::pose_estimation_2d2d ( std::vector<KeyPoint> keypoint
     cout<<"essential_matrix is "<<endl<< essential_matrix<<endl;
 
     //单应矩阵
-    /*
+    
     Mat homography_matrix;
     homography_matrix = findHomography ( points1, points2, RANSAC, 3 );
     cout<<"homography_matrix is "<<endl<<homography_matrix<<endl;
-    */
+    
     
     //本质矩阵 恢复旋转和平移
     recoverPose ( essential_matrix, points1, points2, R, t, focal_length, principal_point );
-   // cout<<"R ： "<<endl<<R<<endl;
-   // cout<<"t ： "<<endl<<t<<endl;
+    
+    cout<<"R ： "<<endl<<R<<endl;
+    cout<<"t ： "<<endl<<t<<endl;
     
 }
 
@@ -266,14 +268,24 @@ void  Triangulation_Solver:: initialize ()
 		);
     
     //保存地标点
+     SE3 se3_Tcw2 = it1->second->T_c_w;
+    MatrixXd tmp_t = se3_Tcw2.translation();
+    double cx = tmp_t(0,0);
+    double cy = tmp_t(1,0);
+    double cz = tmp_t(2,0);
+    
     for( int i = 0; i < points.size(); i++)
     {
-	    MapPoint * tmp = new MapPoint();
 	     if( abs(points.at(i).x) > BADPOINT_THRESHOLD ||
 		    abs(points.at(i).y) > BADPOINT_THRESHOLD ||
 		    abs(points.at(i).z) >BADPOINT_THRESHOLD)
 		    continue;
+	      double d = ((points.at(i).x-cx) *(points.at(i).x-cx) 
+		     +  (points.at(i).y-cy) *(points.at(i).y-cy) 
+		     +  (points.at(i).z-cz) *(points.at(i).z-cz));
+	     if  ( d > BADPOINT_THRESHOLD || d < 0.05) continue;
 	     
+	     MapPoint * tmp = new MapPoint();
 	    tmp->id = Global_Map->map_points.size();
 	    tmp->pos(0,0) = points.at(i).x;
 	    tmp->pos(1,0) = points.at(i).y;

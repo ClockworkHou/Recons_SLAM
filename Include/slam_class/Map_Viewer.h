@@ -13,7 +13,7 @@ class Map_Viewer
 public:
 	Map* Global_Map;
 	
-	void run();
+	void run(char* filename);
 };
 
 

@@ -1,5 +1,6 @@
 
 #include"../Include/slam_class/Input_Handler.h"
+#include"../Include/slam_class/config_hc.h"
 
 namespace slam_class 
 {
@@ -29,6 +30,10 @@ void Input_Handler::run(char* filename)
            // imshow("读取视频", frame);  //显示当前帧
 	    SE3 * tmpse3 = new SE3();
 	    Camera * tmpcam = new Camera();
+	    tmpcam->intrinsics.fx =  camera_Intrinsics_FX;
+	    tmpcam->intrinsics.fy =  camera_Intrinsics_FY;
+	    tmpcam->intrinsics.cx =  camera_Intrinsics_CX;
+	    tmpcam->intrinsics.cy =  camera_Intrinsics_CY;
 	    Frame* tmp_f = new Frame(cnt++, 0, *tmpse3, tmpcam, img.clone(), true);
 	    
 	    Global_Map->insertKeyFrame(tmp_f);

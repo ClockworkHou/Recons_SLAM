@@ -1,8 +1,8 @@
 #ifndef Pnp_Solver_H
 #define Pnp_Solver_H
 
-#include"../include_libs.h"
 #include"Map.h"
+#include"../include_libs.h"
 //#include"MapPoint.h"
 
 namespace slam_class
@@ -32,21 +32,7 @@ public:
 	vector<unsigned long> delete_list;
 	
 	 
-	~Pnp_Solver()
-	{
-		match.clear();
-		matches.clear();
-		keypoints.clear();
-		keypoints_1.clear();
-		keypoints_2.clear();
-		points.clear();
-		points_2d.clear();
-		points_3d.clear();
-		//pts_1.clear();
-		//pts_2.clear();
-		descriptors_buf.clear();
-		delete_list.clear();
-	}
+	
 	void  find_feature_matches ( 
 			    const Mat& img,
 			    Mat& map_descriptors,
@@ -54,11 +40,11 @@ public:
        				);
 	Point2d pixel2cam ( const Point2d & p, const Mat& K );
 	
-	/*
+	
 	 void bundleAdjustment (
 		const Mat& K,
 		Mat& R, Mat& t );
-	*/
+	
 	void triangulate(
 		const Mat & img_1,
 		const Mat & img_2,
@@ -71,9 +57,7 @@ public:
 	void Solve_Pnp (unordered_map<unsigned long, Frame*>::iterator it1, 
 						unordered_map<unsigned long, Frame*>::iterator it2
 	);
-	void Solve_2d2d (unordered_map<unsigned long, Frame*>::iterator it1, 
-						unordered_map<unsigned long, Frame*>::iterator it2
-	);
+	
 	void pose_estimation_2d2d ( std::vector<KeyPoint> keypoints_1,
                             std::vector<KeyPoint> keypoints_2,
                             std::vector< DMatch > matches,

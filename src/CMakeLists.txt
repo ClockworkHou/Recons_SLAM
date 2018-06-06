@@ -9,6 +9,7 @@ SET(SLAMCLASS_SRCS
   Triangulation_Solver.cpp
   Pnp_Solver.cpp
   Map_Builder.cpp
+  
 )
 
 # shared library
