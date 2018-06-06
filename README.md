@@ -24,9 +24,10 @@ Usage:
 
         $ ./recons_slam_main name_of_video_file.mp4 name_of_output_file.pcd
 
- 3. Use pcl_viewer( installed with pcl1.7: pcl-master/bin/pcl_viewer)to check the point cloud. 
+3. Use pcl_viewer( installed with pcl1.7: pcl-master/bin/pcl_viewer)to check the point cloud. 
 
  P.S. Now the outcome of the system is not good enough, the system still needs improvment.
+
 
 The system now have:
 
