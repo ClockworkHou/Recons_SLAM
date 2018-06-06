@@ -1,7 +1,8 @@
 # Recons_SLAM
 # Created by Hou Chen & Zhou Haotian from Peking Univ.
 
-This is a simple(toy) real-time monocular SLAM system.
+This is a simple(toy) real-time monocular SLAM system,
+aiming at reconstruction as first priority.
 
 The system runs on a linux environment. Ubuntu 14.04 is ok.
 
@@ -51,3 +52,4 @@ Things to be done:
   one tracking cameras, 
   one building map, 
   and one handling loop fusion.) 
+5. Camera poses visualization.
