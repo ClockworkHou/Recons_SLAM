@@ -33,7 +33,7 @@ The system now have:
 
   1.An input handler which reads a .mp4/.avi file from fimesystem and save all the frames into the memory.
 
-  2.Global Map & Local Map with cloud points as map point and frames to record camera motion.
+  2.Global Map & Local Map with cloud points as map point and frames to record camera poses.
 
   3.An initializer using ORB features and two view geometory to builde an initial map.
 
