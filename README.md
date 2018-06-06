@@ -1,7 +1,7 @@
 # Recons_SLAM
 # Created by Hou Chen & Zhou Haotian from Peking Univ.
 
-This is a simple(toy) monocular SLAM system.
+This is a simple(toy) real-time monocular SLAM system.
 
 The system runs on a linux environment. Ubuntu 14.04 is ok.
 
